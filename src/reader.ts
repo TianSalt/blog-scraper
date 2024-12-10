@@ -1,37 +1,36 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import pLimit from "p-limit";
+import { Article, IBlog } from "./database";
 
 export default async function readBlog(
-  linkList: string[],
-  proxy: string | null = null
+  articleUrl: string,
+  config: IBlog,
+  proxy: string
 ) {
   puppeteer.use(StealthPlugin());
-  let browser;
-  if (proxy)
-    browser = await puppeteer.launch({
-      args: [`--proxy-server=${proxy}`],
-    });
-  else browser = await puppeteer.launch();
-  const limit = pLimit(5);
-  let tasks = [];
-  for (const url of linkList) {
-    tasks.push(
-      limit(async () => {
-        try {
-          await new Promise((r) => setTimeout(r, Math.random() * 2000));
-          let page = await browser.newPage();
-          await page.goto(url, {
-            waitUntil: "networkidle2",
-          });
-          await page.content();
-          console.log(`Succeeded to read ${url}`);
-          page.close();
-        } catch (error) {
-          console.error(`Failed    to read ${url}`);
-        }
-      })
-    );
+  const browser = await puppeteer.launch({
+    args: [`--proxy-server=${proxy}`],
+  });
+  for (let i = 0; i < 10; i++) {
+    try {
+      // await new Promise((r) => setTimeout(r, Math.random() * 5000));
+      let page = await browser.newPage();
+      await page.goto(articleUrl, {
+        waitUntil: "networkidle2",
+      });
+      const content = await page.content();
+      console.log(`+ Attempt ${i + 1} getting article ${articleUrl}`);
+      const article = new Article({
+        dataSourceId: config._id,
+        articleUrl,
+        content,
+      });
+      await article.save();
+      await page.close();
+      return;
+    } catch (error) {
+      console.error(`- Attempt ${i + 1} getting article ${articleUrl}`);
+    }
   }
-  await Promise.all(tasks);
+  await browser.close();
 }

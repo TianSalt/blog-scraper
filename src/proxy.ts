@@ -14,9 +14,9 @@ interface ApiResponse {
   data: any[];
 }
 
-const workingProxies: Proxy[] = [];
+let workingProxies: Proxy[] = [];
 const url =
-  "http://route.xiongmaodaili.com/xiongmao-web/api/glip?secret=ca9d53779793bd500c5f10dbbd539c9a&orderNo=GL202412070433260RLkTbTv&count=10&isTxt=0&proxyType=1&returnAccount=1";
+  "http://route.xiongmaodaili.com/xiongmao-web/api/glip?secret=ca9d53779793bd500c5f10dbbd539c9a&orderNo=GL202412070433260RLkTbTv&count=5&isTxt=0&proxyType=1&returnAccount=1";
 
 async function fetchProxies(url: string): Promise<Proxy[]> {
   try {
@@ -32,41 +32,42 @@ async function fetchProxies(url: string): Promise<Proxy[]> {
   }
 }
 
-function testProxy(proxy: Proxy): Promise<boolean> {
-  return new Promise((resolve) => {
-    const socket = new net.Socket();
+// function testProxy(proxy: Proxy): Promise<boolean> {
+//   return new Promise((resolve) => {
+//     const socket = new net.Socket();
 
-    socket.setTimeout(5000);
-    socket.on("connect", () => {
-      socket.destroy();
-      resolve(true);
-    });
+//     socket.setTimeout(5000);
+//     socket.on("connect", () => {
+//       socket.destroy();
+//       resolve(true);
+//     });
 
-    socket.on("timeout", () => {
-      socket.destroy();
-      resolve(false);
-    });
+//     socket.on("timeout", () => {
+//       socket.destroy();
+//       resolve(false);
+//     });
 
-    socket.on("error", () => {
-      socket.destroy();
-      resolve(false);
-    });
+//     socket.on("error", () => {
+//       socket.destroy();
+//       resolve(false);
+//     });
 
-    socket.connect(parseInt(proxy.port), proxy.ip);
-  });
-}
+//     socket.connect(parseInt(proxy.port), proxy.ip);
+//   });
+// }
 
 export async function getProxy() {
-  const proxies = await fetchProxies(url);
-  for (const proxy of proxies) {
-    const isWorking = await testProxy(proxy);
-    if (isWorking) {
-      workingProxies.push(proxy);
-      console.log(`Proxy ${proxy.ip}:${proxy.port} is working.`);
-    } else {
-      console.log(`Proxy ${proxy.ip}:${proxy.port} is not working.`);
-    }
-  }
+  workingProxies = await fetchProxies(url);
+  // const proxies = await fetchProxies(url);
+  // for (const proxy of proxies) {
+  //   const isWorking = await testProxy(proxy);
+  //   if (isWorking) {
+  //     workingProxies.push(proxy);
+  //     console.log(`Proxy ${proxy.ip}:${proxy.port} is working.`);
+  //   } else {
+  //     console.log(`Proxy ${proxy.ip}:${proxy.port} is not working.`);
+  //   }
+  // }
 }
 
 export async function newProxy(): Promise<Proxy> {

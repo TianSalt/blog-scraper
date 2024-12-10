@@ -1,6 +1,6 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { IBlog, Article, articleQueue } from "./types";
+import { IBlog, Article, articleQueue } from "./database";
 import { Page } from "puppeteer";
 
 export default async function scrapeBlog(
@@ -11,12 +11,9 @@ export default async function scrapeBlog(
 ) {
   puppeteer.use(StealthPlugin());
 
-  let browser;
-  if (proxy)
-    browser = await puppeteer.launch({
-      args: [`--proxy-server=${proxy}`],
-    });
-  else browser = await puppeteer.launch();
+  let browser = await puppeteer.launch({
+    args: [`--proxy-server=${proxy}`],
+  });
   let page = await browser.newPage();
 
   await page.goto(`${config.blogUrl}${config.indexPage}`, {
@@ -26,6 +23,25 @@ export default async function scrapeBlog(
   let blogLinks = await page.evaluate((config) => {
     return eval(config.articleLinkSelector);
   }, config);
+
+  const pageLimit = 100;
+  if (config.nextPageSelector !== "") {
+    for (let pageNumber = 1; pageNumber < pageLimit; pageNumber++) {
+      try {
+        // await new Promise((r) => setTimeout(r, Math.random() * 1000));
+        await page.click(config.nextPageSelector);
+        let links = await page.evaluate((config) => {
+          return eval(config.articleLinkSelector);
+        }, config);
+        console.log(links[1]);
+        blogLinks = await blogLinks.concat(links);
+        console.log(`Read Page ${pageNumber}`);
+      } catch (error) {
+        console.log(`MORESELECTOR: ${error}`);
+        break;
+      }
+    }
+  }
 
   if (browser) {
     await page.close();
@@ -49,7 +65,7 @@ export default async function scrapeBlog(
 
   for (const url of newLinks) {
     console.log("Adding article to queue", url);
-    await articleQueue.add(url, { url, config });
+    await articleQueue.add("article", { url, config, proxy });
   }
 
   return blogLinks;
