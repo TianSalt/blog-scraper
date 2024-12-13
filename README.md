@@ -7,4 +7,8 @@ Task 1: "IP Rotation and Anti-Scraping Integration"
 Task 2: Handle Pagination, Infinite Scrolling, and Errors
 - (Done) "Pagination Handling": Done on Ethereum blog.
 - "Infinite Scrolling": Have not met such blog.
-- (Done?) "Content Loading and Error Handling": Implemented multiple attempt when using proxies and fetching articles.
+- (Done) "Content Loading and Error Handling": Implemented multiple attempt when using proxies and fetching articles.
+
+Task 3: Automated Testing and Continuous Integration
+- (Did one function) Create automated tests that validate scraper functionality.
+- (Done) Configure tests to run as a GitHub Action.

@@ -3,43 +3,61 @@ import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IBlog, Article, articleQueue } from "./database";
 import { Page } from "puppeteer";
 
-export default async function scrapeBlog(
-  config: IBlog,
-  existingPage: Page | null = null,
-  limit: number | null = null,
-  proxy: string | null = null
-) {
+export async function getArticles(config: IBlog, proxy: string | null = null) {
   puppeteer.use(StealthPlugin());
 
-  let browser = await puppeteer.launch({
-    args: [`--proxy-server=${proxy}`],
-  });
+  let browser;
+  if (proxy) {
+    browser = await puppeteer.launch({
+      args: [`--proxy-server=${proxy}`],
+    });
+  } else {
+    browser = await puppeteer.launch();
+  }
   let page = await browser.newPage();
-
   await page.goto(`${config.blogUrl}${config.indexPage}`, {
     waitUntil: "networkidle2",
   });
+
+  if (config.moreSelector !== "") {
+    const moreLimit = 100;
+    for (let moreNumber = 0; moreNumber < moreLimit; moreNumber++) {
+      try {
+        await page.waitForSelector(config.moreSelector, { timeout: 5000 });
+        await page.click(config.moreSelector);
+        console.log(`Clicked MORE for ${moreNumber + 1} times`);
+        await new Promise((r) => setTimeout(r, Math.random() * 500 + 500));
+      } catch (error) {
+        console.log(`MORESELECTOR: ${error}`);
+        break;
+      }
+      if (moreNumber === moreLimit - 1)
+        console.error("MORESELECTOR: Max more-limit excceeded.");
+    }
+  }
 
   let blogLinks = await page.evaluate((config) => {
     return eval(config.articleLinkSelector);
   }, config);
 
-  const pageLimit = 100;
   if (config.nextPageSelector !== "") {
-    for (let pageNumber = 1; pageNumber < pageLimit; pageNumber++) {
+    const pageLimit = 100;
+    for (let pageNumber = 0; pageNumber < pageLimit; pageNumber++) {
       try {
-        // await new Promise((r) => setTimeout(r, Math.random() * 1000));
+        await page.waitForSelector(config.nextPageSelector, { timeout: 5000 });
         await page.click(config.nextPageSelector);
+        console.log(`Turned to Page ${pageNumber + 2}`);
+        await new Promise((r) => setTimeout(r, Math.random() * 500 + 500));
         let links = await page.evaluate((config) => {
           return eval(config.articleLinkSelector);
         }, config);
-        console.log(links[1]);
         blogLinks = await blogLinks.concat(links);
-        console.log(`Read Page ${pageNumber}`);
       } catch (error) {
-        console.log(`MORESELECTOR: ${error}`);
+        console.log(`NEXTPAGESELECTOR: ${error}`);
         break;
       }
+      if (pageNumber === pageLimit - 1)
+        console.error("MORESELECTOR: Max more-limit excceeded.");
     }
   }
 
@@ -47,6 +65,17 @@ export default async function scrapeBlog(
     await page.close();
     await browser.close();
   }
+
+  return blogLinks;
+}
+
+export default async function scrapeBlog(
+  config: IBlog,
+  existingPage: Page | null = null,
+  limit: number | null = null,
+  proxy: string | null = null
+) {
+  let blogLinks = await getArticles(config, proxy);
 
   if (limit) blogLinks = blogLinks.slice(0, limit);
 

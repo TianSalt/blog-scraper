@@ -1,5 +1,7 @@
 import axios from "axios";
 import * as net from "net";
+import { IBlog } from "./database";
+import puppeteer from "puppeteer";
 
 interface Proxy {
   port: string;
@@ -16,7 +18,7 @@ interface ApiResponse {
 
 let workingProxies: Proxy[] = [];
 const url =
-  "http://route.xiongmaodaili.com/xiongmao-web/api/glip?secret=ca9d53779793bd500c5f10dbbd539c9a&orderNo=GL202412070433260RLkTbTv&count=5&isTxt=0&proxyType=1&returnAccount=1";
+  "http://pandavip.xiongmaodaili.com/xiongmao-web/apiPlus/vgl?secret=ca9d53779793bd500c5f10dbbd539c9a&orderNo=VGL2024121222300878etb2CM&count=5&isTxt=0&proxyType=1&validTime=0&removal=0&cityIds=&returnAccount=1";
 
 async function fetchProxies(url: string): Promise<Proxy[]> {
   try {
@@ -32,42 +34,31 @@ async function fetchProxies(url: string): Promise<Proxy[]> {
   }
 }
 
-// function testProxy(proxy: Proxy): Promise<boolean> {
-//   return new Promise((resolve) => {
-//     const socket = new net.Socket();
-
-//     socket.setTimeout(5000);
-//     socket.on("connect", () => {
-//       socket.destroy();
-//       resolve(true);
-//     });
-
-//     socket.on("timeout", () => {
-//       socket.destroy();
-//       resolve(false);
-//     });
-
-//     socket.on("error", () => {
-//       socket.destroy();
-//       resolve(false);
-//     });
-
-//     socket.connect(parseInt(proxy.port), proxy.ip);
-//   });
-// }
-
-export async function getProxy() {
+export async function getProxy(config: IBlog) {
   workingProxies = await fetchProxies(url);
   // const proxies = await fetchProxies(url);
+  // let browser;
   // for (const proxy of proxies) {
-  //   const isWorking = await testProxy(proxy);
-  //   if (isWorking) {
+  //   console.log(
+  //     `Testing proxy ${proxy.ip}:${proxy.port} to ${config.blogUrl}${config.indexPage}`
+  //   );
+  //   try {
+  //     browser = await puppeteer.launch({
+  //       args: [`--proxy-server=${proxy.ip}:${proxy.port}`],
+  //     });
+  //     let page = await browser.newPage();
+  //     await page.goto(`${config.blogUrl}${config.indexPage}`, {
+  //       waitUntil: "networkidle2",
+  //     });
+  //     console.log("Reachable.");
   //     workingProxies.push(proxy);
-  //     console.log(`Proxy ${proxy.ip}:${proxy.port} is working.`);
-  //   } else {
-  //     console.log(`Proxy ${proxy.ip}:${proxy.port} is not working.`);
+  //     if (browser) await browser.close();
+  //   } catch (error) {
+  //     console.error("Failed.");
+  //     if (browser) await browser.close();
   //   }
   // }
+  // if (browser) await browser.close();
 }
 
 export async function newProxy(): Promise<Proxy> {

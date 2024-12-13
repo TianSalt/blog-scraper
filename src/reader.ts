@@ -1,36 +1,55 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { Article, IBlog } from "./database";
+import { newProxy } from "./proxy";
 
 export default async function readBlog(
   articleUrl: string,
   config: IBlog,
-  proxy: string
+  proxy: string | null = null
 ) {
   puppeteer.use(StealthPlugin());
-  const browser = await puppeteer.launch({
-    args: [`--proxy-server=${proxy}`],
-  });
+  let browser;
+  if (proxy) {
+    browser = await puppeteer.launch({
+      args: [`--proxy-server=${proxy}`],
+    });
+  } else {
+    browser = await puppeteer.launch();
+  }
+
   for (let i = 0; i < 10; i++) {
     try {
-      // await new Promise((r) => setTimeout(r, Math.random() * 5000));
       let page = await browser.newPage();
       await page.goto(articleUrl, {
         waitUntil: "networkidle2",
       });
       const content = await page.content();
-      console.log(`+ Attempt ${i + 1} getting article ${articleUrl}`);
       const article = new Article({
         dataSourceId: config._id,
         articleUrl,
         content,
       });
       await article.save();
-      await page.close();
-      return;
+      console.log(`[SUCCEED] Attempt ${i + 1} fetching article ${articleUrl}`);
+      if (browser) {
+        await page.close();
+        await browser.close();
+      }
+      break;
     } catch (error) {
-      console.error(`- Attempt ${i + 1} getting article ${articleUrl}`);
+      if (browser) {
+        await browser.close();
+      }
+      console.log(`[FAILED]  Attempt ${i + 1} fetching article ${articleUrl}`);
+      // if (proxy && proxy.length >= 2) {
+      //   await browser.close();
+      //   let proxy = await newProxy();
+      //   browser = await puppeteer.launch({
+      //     args: [`--proxy-server=${proxy.ip}:${proxy.port}`],
+      //   });
+      //   console.log(`Now use ${proxy.ip}:${proxy.port} to fetch ${articleUrl}`);
+      // }
     }
   }
-  await browser.close();
 }
