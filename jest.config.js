@@ -1,7 +1,9 @@
-export const testEnvironment = "node";
-export const testRegex = "/test/.*\\.(test|spec)?\\.(ts|tsx)$";
-export const moduleFileExtensions = ["ts", "tsx", "js", "jsx", "json", "node"];
-export const transform = {
-  "^.+\\.jsx?$": "babel-jest",
-  "^.+\\.ts?$": "ts-jest",
+module.exports = {
+  testEnvironment: "node",
+  testRegex: "/test/.*\\.(test|spec)?\\.(ts|tsx)$",
+  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
+  transform: {
+    "^.+\\.jsx?$": "babel-jest",
+    "^.+\\.ts?$": "ts-jest",
+  },
 };

@@ -1,7 +1,7 @@
 import { getArticles } from "../scraper";
 
 const mockConfigPhesoca = {
-  blogUrl: "file:///D:/working/blog-scraper/src/test/phesoca.html",
+  blogUrl: `file:///${__dirname}/phesoca.html`,
   indexPage: "",
   articleLinkSelector:
     "Array.from(document.querySelectorAll(\"a[rel='bookmark']\")).filter(a => a.children.length === 0).map(a => a.href)",
