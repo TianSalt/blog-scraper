@@ -3,26 +3,41 @@ name: Run Tests
 on: [push, pull_request]
 
 jobs:
+  pre:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Compile TypeScript
+        run: npx tsc
+
   test:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Set up Node.js
-      uses: actions/setup-node
-      with:
-        node-version: '14'
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14"
 
-    - name: Install dependencies
-      run: npm install
+      - name: Install dependencies
+        run: npm install
 
-    - name: Install test components
-      run: npm i babel-jest @babel/core @babel/preset-env ts-babel -D
+      - name: Compile TypeScript
+        run: npx tsc
 
-    - name: Compile TypeScript
-      run: npx tsc
-
-    - name: Run tests
-      run: npm test
+      - name: Run tests
+        run: npm test
